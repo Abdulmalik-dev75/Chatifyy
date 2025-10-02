@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App - Login</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f6fa;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .hidden { display: none; }
+
+    /* Login Page */
+    #login {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 40px 30px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    #login h2 {
+      margin-bottom: 25px;
+      color: #333;
+    }
+    #login input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    #login button {
+      width: 100%;
+      padding: 12px;
+      background: #1dbf73; /* Fiverr green */
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    #login button:hover {
+      background: #13a35b;
+    }
+
+    /* Chat App */
+    #chat-container {
+      width: 100%;
+      max-width: 480px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+    }
+    header {
+      background: #1dbf73;
+      color: white;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header button {
+      background: white;
+      color: #1dbf73;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #chat-box {
+      flex: 1;
+      padding: 15px;
+      background: #f0f2f5;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .message {
+      max-width: 70%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 15px;
+      word-wrap: break-word;
+    }
+    .user {
+      background: #dcf8c6;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+    #input-area {
+      display: flex;
+      padding: 10px;
+      background: #fff;
+      border-top: 1px solid #ccc;
+    }
+    #message-input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 15px;
+    }
+    #send-btn {
+      margin-left: 10px;
+      background: #1dbf73;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login screen -->
+  <div id="login">
+    <h2>Sign In to Chat</h2>
+    <input type="text" id="username" placeholder="Enter your username"/>
+    <button onclick="login()">Sign In</button>
+  </div>
+
+  <!-- Chat container -->
+  <div id="chat-container" class="hidden">
+    <header>
+      <span id="chat-header"></span>
+      <button onclick="logout()">Logout</button>
+    </header>
+    <div id="chat-box"></div>
+    <div id="input-area">
+      <input type="text" id="message-input" placeholder="Type a message..."/>
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const loginScreen = document.getElementById("login");
+    const chatContainer = document.getElementById("chat-container");
+    const chatHeader = document.getElementById("chat-header");
+    const chatBox = document.getElementById("chat-box");
+    const input = document.getElementById("message-input");
+    const sendBtn = document.getElementById("send-btn");
+    let currentUser = "";
+
+    // Check if user already signed in
+    window.onload = () => {
+      const savedUser = localStorage.getItem("chat-user");
+      if (savedUser) {
+        currentUser = savedUser;
+        enterChat();
+      }
+    };
+
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      if (!username) return alert("Please enter a username!");
+
+      localStorage.setItem("chat-user", username);
+      currentUser = username;
+      enterChat();
+    }
+
+    function enterChat() {
+      chatHeader.textContent = "Welcome, " + currentUser;
+      loginScreen.classList.add("hidden");
+      chatContainer.classList.remove("hidden");
+      loadMessages();
+    }
+
+    function logout() {
+      localStorage.removeItem("chat-user");
+      chatBox.innerHTML = "";
+      chatContainer.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+    }
+
+    // Send message
+    function sendMessage() {
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const messageObj = { user: currentUser, text: msg, time: new Date().toLocaleTimeString() };
+      saveMessage(messageObj);
+      addMessageToUI(messageObj);
+      input.value = "";
+    }
+
+    function addMessageToUI(messageObj) {
+      const div = document.createElement("div");
+      div.className = "message user";
+      div.textContent = messageObj.text + "  (" + messageObj.time + ")";
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function saveMessage(messageObj) {
+      let messages = JSON.parse(localStorage.getItem("chat-" + currentUser)) || [];
+      messages.push(messageObj);
+      localStorage.setItem("chat-" + currentUser, JSON.stringify(messages));
+    }
+
+    function loadMessages() {
+      chatBox.innerHTML = "";
+      let messages = JSON.parse(localStorage.getItem("chat-" + currentUser)) || [];
+      messages.forEach(msg => addMessageToUI(msg));
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>
